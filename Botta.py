@@ -16,9 +16,12 @@ class MyClient(discord.Client):
             print(f'Message from {message.author}: {message.content}')
 
         if(message.author.id != self.user.id and message.content[0] == "-"):
-            channel = client.get_channel(message.channel.id)
-            await channel.send(message.content[1:])
-           
+            try:
+                channel = client.get_channel(message.channel.id)
+                await channel.send(message.content[1:])
+            except:
+                pass
+
 
         
 
