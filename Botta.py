@@ -18,6 +18,8 @@ class MyClient(discord.Client):
         if(message.author.id != self.user.id and message.content[0] == "-"):
             try:
                 channel = client.get_channel(message.channel.id)
+                msg = await channel.fetch_message(message.id)
+                await msg.delete()
                 await channel.send(message.content[1:])
             except:
                 pass
