@@ -1,91 +1,55 @@
 #Import libraries
 import discord
-from discord.ext import commands
-from discord.components import Button, ButtonStyle
+from discord import app_commands
 import pandas as pd
 import pathlib
+import re
 
+voteStarted = False
+hostUser = ""
+users = {}
+
+class MyClient(discord.Client):
+    #When the bot has started
+    async def on_ready(self):
+        await tree.sync(guild=discord.Object(id=1145786156185829407))
+        print(f'Logged on as {self.user}')
+
+    #when there is a message sent
+    async def on_message(self, message):
+        if(message.author == self.user): return
+        if(message.author.id == hostUser):
+            channel = client.get_channel(message.channel.id)
+            if(not "@" in message.content):
+                
+                await channel.send("There's not a single user in that sentence")
+                await channel.send("dumbass")
+            for _, user in enumerate(re.finditer(r"<.{19}>", message.content)):
+                if user.group() not in users.keys: 
+                    users[user.group()[2:-1]]
+
+#Gets the intents and adds them to the client
 intents = discord.Intents.default()
 intents.message_content = True
-intents.guilds = True
 
-bot = commands.Bot(command_prefix='-', intents=intents)
+#Defines the client
+client = MyClient(intents=intents)
+#Sets the app commands
+tree = app_commands.CommandTree(client)
 
-users = {}
-games = []
-votes = {}
-
-@bot.event
-async def on_ready():
-    print(f'Bot is ingelogd als {bot.user}')
-
-
-@bot.command()
-async def send_embed(ctx):
-    embed = discord.Embed(title="Input Form", description="Enter something:")
-    await ctx.send(
-        embed=embed,
-        components=[
-            Button(style=ButtonStyle.blurple, label="Click me!", custom_id="input_button"),
-        ],
-    )
-
-@bot.event
-async def on_button_click(interaction):
-    if interaction.custom_id == "input_button":
-        await interaction.respond(
-            type=7,  # Acknowledge the interaction
-            content="Please enter something:",
-            components=[
-                Button(style=ButtonStyle.blurple, label="Submit", custom_id="confirm_button"),
-            ],
-        )
-
-@bot.event
-async def on_button_click(interaction):
-    if interaction.custom_id == "confirm_button":
-        user_input = interaction.message.content  # Get the content of the message
-        await interaction.respond(content=f"You entered: {user_input}")
-
-
-
-@bot.command()
-async def start_vote(ctx, game_name):
-    
-
-    if game_name not in games: 
-        games.append(game_name)
-        votes[game_name] = 0
-    else: 
-        ctx.send('Dat nummer is al toegevoegt!')
-        return
-    await ctx.send(f'{game_name} is toegevoegd aan de lijst!')
-
-@bot.command()
-async def show_gamelist(ctx):
-    await ctx.send(games)
-
-@bot.command()
-async def vote(ctx, game_name):
-    if game_name in games:
-        if ctx.author.id not in votes:
-            votes[ctx.author.id] = game_name
-            await ctx.send(f'Je hebt gestemd voor {game_name}!')
-        else:
-            await ctx.send('Je hebt al gestemd!')
-    else:
-        await ctx.send('Dit spel staat niet in de lijst!')
-
-@bot.command()
-async def calculate_winner(ctx):
-    for vote in votes.values():
-        if vote in games:
-            games[vote] += 1
-
-    winner = max(games, key=games.get)
-    await ctx.send(f'Het winnende spel is {winner}!')
+#Sets the slash commands
+@tree.command(name="start_vote", description="Starts the vote", guild=discord.Object(id=1145786156185829407))
+async def start_vote(message):
+    global hostUser, voteStarted, users
+    if(voteStarted):
+        await message.response.send_message(content=f"Voting has already started by <@{hostUser}>", ephemeral=True)
+        return 
+    voteStarted = True
+    hostUser = message.user.id
+    print(hostUser)
+    await message.response.send_message(f"Vote Started \n<@{hostUser}>, list all users that participate")
 
 #retrieves the api key from the csv and runs the client
 secrets = pd.read_csv(f'{pathlib.Path(__file__).parent.resolve()}\secrets.csv')
 apikey = secrets["APIKey"].values[0]
-bot.run(apikey)
+client.run(apikey)
