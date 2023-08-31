@@ -4,28 +4,50 @@ from discord import app_commands
 import pandas as pd
 import pathlib
 import re
+import time
 
 currUser = ""
 voteStarted = False
 hostUser = ""
-userIndex = -1
+userIndex = 0
+gameCount = 0
 userDone = True
 users = {}
+addedGames = []
 gameStage = {
     "addusers" : True,
     "addgames" : False,
     "votegames": False
 }
 
+
+#Resets all the game values
+def reset_values():
+    global hostUser, voteStarted, users, addedGames, currUser, userIndex, gameCount, userDone, gameStage
+    currUser = ""
+    voteStarted = False
+    hostUser = ""
+    userIndex = 0
+    gameCount = 0
+    userDone = True
+    users = {}
+    addedGames = []
+    gameStage = {
+        "addusers" : True,
+        "addgames" : False,
+        "votegames": False
+    }
+
 class MyClient(discord.Client):
     #When the bot has started
     async def on_ready(self):
+        reset_values()
         await tree.sync(guild=discord.Object(id=1145786156185829407))
         print(f'Logged on as {self.user}')
 
     #when there is a message sent
     async def on_message(self, message:discord.Message):
-        global currUser, userDone, userIndex
+        global currUser, userDone, userIndex, gameCount
         if(message.author == self.user): return #If the bot has sent the message, ignore it
         channel = client.get_channel(message.channel.id) #Sets the channel for replying
 
@@ -51,27 +73,69 @@ class MyClient(discord.Client):
             await channel.send("Players who participate:")
             for user in users.keys():
                 await channel.send(user)
-
-            await channel.send("Now all players will add their games")
+            await channel.send("---------------------------")
+            await channel.send("GAME STAGE")
+            time.sleep(1)
+            await channel.send("Now all players will add their games\n ")
+            time.sleep(1)
             await channel.send("The games have to be unique, so no doubles")
-
+            time.sleep(1)
+            await channel.send("If you post doubles, they will be ignored")
+            time.sleep(1)
+            await channel.send("If you post more than 3 games, the excess will be ignored")
+            time.sleep(1)
+            await channel.send("Seperate your choises with a comma (,)\n---------------------------")
             #Switch gamestage
             gameStage["addusers"] = False
             gameStage["addgames"] = True
             
-        #If the game stake is to add the games
+        #If the game stage is to add the games
         if(gameStage["addgames"]):
             if(userDone):
-                userIndex += 1
+                gameCount = 0
                 currUser = list(users.keys())[userIndex]
                 await channel.send(f"{currUser}, please add your 3 games")
                 userDone = False
                 return
-            if(message.author.id != currUser): return
-                
 
+            if(message.author.id != int(currUser[2:-1])): return
+            choises = message.content.split(",")
+            choises = [i.strip().upper() for i in choises]
+            for choise in choises:
+                if choise in addedGames: continue
+                if gameCount == 3: break
+                addedGames.append(choise)
+                gameCount += 1
 
+            print(addedGames)
+            if(gameCount < 3):
+                await channel.send(f"You still need to add {3 - gameCount} game(s)")
+                return
+            
+            userIndex += 1
+            if(userIndex + 1 > len(list(users.keys()))):
+                gameStage["addgames"] = False
+                gameStage["votegames"] = True
+            userDone = True
 
+        #If the game stage is to vote the games
+        if(gameStage["votegames"]):
+            await channel.send("---------------------------")
+            await channel.send("VOTING STAGE")
+            time.sleep(1)
+            await channel.send("Now all players will vote on the games\n ")
+            time.sleep(1)
+            await channel.send("Everyone will get 3 votes")
+            time.sleep(1)
+            await channel.send("The first vote is worth 3 points")
+            time.sleep(1)
+            await channel.send("The second is worth 2 ")
+            time.sleep(1)
+            await channel.send("The third and final vote is worth 3 ")
+            time.sleep(1)
+            await channel.send("Seperate your choises with a comma (,)\n---------------------------")
+            await channel.send(addedGames)
+            
 
 #Gets the intents and adds them to the client
 intents = discord.Intents.default()
@@ -95,16 +159,14 @@ async def start_vote(message):
 
 @tree.command(name="stop_vote", description="Starts the vote", guild=discord.Object(id=1145786156185829407))
 async def stop_vote(message):
-    global hostUser, voteStarted, users
+
     if(message.user.id != hostUser):
         await message.response.send_message(content=f"The vote can only be stopped by <@{hostUser}>", ephemeral=True)
         return
     if(not voteStarted):
         await message.response.send_message(content=f"No vote has been started yet", ephemeral=True)
         return 
-    users = {}
-    hostUser = ""
-    voteStarted = False
+    reset_values()
     await message.response.send_message(f"Voting has been stopped")
 
 
