@@ -6,6 +6,8 @@ import pathlib
 import re
 import time
 
+movieFile = open("movieFile.txt", "a")
+gameFile = open("gameFile.txt", "a")
 currUser = ""
 voteStarted = False
 hostUser = ""
@@ -23,7 +25,9 @@ gameStage = {
 
 #Resets all the game values
 def reset_values():
-    global hostUser, voteStarted, users, addedGames, currUser, userIndex, gameCount, userDone, gameStage
+    global hostUser, voteStarted, users, addedGames, currUser, userIndex, gameCount, userDone, gameStage, gameFile, movieFile
+    movieFile = open("movieFile.txt", "a")
+    gameFile = open("gameFile.txt", "a")
     currUser = ""
     voteStarted = False
     hostUser = ""
@@ -105,6 +109,7 @@ class MyClient(discord.Client):
                 if choise in addedGames: continue
                 if gameCount == 3: break
                 addedGames.append(choise)
+                gameFile.write(choise+"\n")
                 gameCount += 1
 
             print(addedGames)
@@ -117,6 +122,7 @@ class MyClient(discord.Client):
                 gameStage["addgames"] = False
                 gameStage["votegames"] = True
             userDone = True
+            gameFile.close()
 
         #If the game stage is to vote the games
         if(gameStage["votegames"]):
