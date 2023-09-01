@@ -6,6 +6,8 @@ import pathlib
 import re
 import time
 
+movieFile = open("movieFile.txt", "a")
+gameFile = open("gameFile.txt", "a")
 currUser = ""
 voteStarted = False
 hostUser = ""
@@ -25,7 +27,9 @@ gameStage = {
 
 #Resets all the game values
 def reset_values():
-    global hostUser, voteStarted, users, addedGames, currUser, userIndex, gameCount, userDone, gameStage, voteCount
+    global hostUser, voteStarted, users, addedGames, currUser, userIndex, gameCount, userDone, gameStage, gameFile, movieFile, voteCount
+    movieFile = open("movieFile.txt", "a")
+    gameFile = open("gameFile.txt", "a")
     currUser = ""
     voteStarted = False
     hostUser = ""
