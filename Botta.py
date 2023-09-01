@@ -11,6 +11,7 @@ voteStarted = False
 hostUser = ""
 userIndex = 0
 gameCount = 0
+voteCount = 0
 userDone = True
 users = {}
 addedGames = []
@@ -23,12 +24,13 @@ gameStage = {
 
 #Resets all the game values
 def reset_values():
-    global hostUser, voteStarted, users, addedGames, currUser, userIndex, gameCount, userDone, gameStage
+    global hostUser, voteStarted, users, addedGames, currUser, userIndex, gameCount, userDone, gameStage, voteCount
     currUser = ""
     voteStarted = False
     hostUser = ""
     userIndex = 0
     gameCount = 0
+    voteCount = 0
     userDone = True
     users = {}
     addedGames = []
@@ -41,7 +43,6 @@ def reset_values():
 class MyClient(discord.Client):
     #When the bot has started
     async def on_ready(self):
-        reset_values()
         await tree.sync(guild=discord.Object(id=1145786156185829407))
         print(f'Logged on as {self.user}')
 
@@ -73,18 +74,15 @@ class MyClient(discord.Client):
             await channel.send("Players who participate:")
             for user in users.keys():
                 await channel.send(user)
-            await channel.send("---------------------------")
-            await channel.send("GAME STAGE")
-            time.sleep(1)
-            await channel.send("Now all players will add their games\n ")
-            time.sleep(1)
-            await channel.send("The games have to be unique, so no doubles")
-            time.sleep(1)
-            await channel.send("If you post doubles, they will be ignored")
-            time.sleep(1)
-            await channel.send("If you post more than 3 games, the excess will be ignored")
-            time.sleep(1)
-            await channel.send("Seperate your choises with a comma (,)\n---------------------------")
+            embed=discord.Embed(title="GAME STAGE", 
+                                description="""Now all players will add their games. \n
+                                The games have to be unique, so no doubles \n
+                                If you post doubles, they will be ignored \n
+                                If you post more than 3 games, the excess will be ignored \n
+                                Seperate your choises with a comma (,)""", color=0x6de8af)
+            embed.set_author(name="MetMatBot")
+            embed.set_footer(text="Ìf u read this your gay")
+            await channel.send(embed=embed)
             #Switch gamestage
             gameStage["addusers"] = False
             gameStage["addgames"] = True
@@ -116,6 +114,7 @@ class MyClient(discord.Client):
             if(userIndex + 1 > len(list(users.keys()))):
                 gameStage["addgames"] = False
                 gameStage["votegames"] = True
+            userIndex = 0
             userDone = True
 
         #If the game stage is to vote the games
@@ -135,6 +134,32 @@ class MyClient(discord.Client):
             time.sleep(1)
             await channel.send("Seperate your choises with a comma (,)\n---------------------------")
             await channel.send(addedGames)
+            if(userDone):
+                voteCount = 0
+                currUser = list(users.keys())[userIndex]
+                await channel.send(f"{currUser}, please vote on your 3 games")
+                userDone = False
+                return
+
+            if(message.author.id != int(currUser[2:-1])): return
+            choises = message.content.split(",")
+            choises = [i.strip().upper() for i in choises]
+            for choise in choises:
+                if choise in addedGames: continue
+                if gameCount == 3: break
+                addedGames.append(choise)
+                gameCount += 1
+
+            print(addedGames)
+            if(gameCount < 3):
+                await channel.send(f"You still need to add {3 - gameCount} game(s)")
+                return
+            
+            userIndex += 1
+            if(userIndex + 1 > len(list(users.keys()))):
+                gameStage["addgames"] = False
+                gameStage["votegames"] = True
+            userDone = True
             
 
 #Gets the intents and adds them to the client
