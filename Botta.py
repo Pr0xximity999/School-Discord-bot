@@ -141,7 +141,7 @@ class MyClient(discord.Client):
             time.sleep(1)
             await channel.send("Seperate your choises with a comma (,)\n---------------------------")
             await channel.send(addedGames)
-            
+                
 
 #Gets the intents and adds them to the client
 intents = discord.Intents.default()
