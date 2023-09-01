@@ -26,13 +26,9 @@ gameStage = {
 
 #Resets all the game values
 def reset_values():
-<<<<<<< HEAD
-    global hostUser, voteStarted, users, addedGames, currUser, userIndex, gameCount, userDone, gameStage, voteCount
-=======
-    global hostUser, voteStarted, users, addedGames, currUser, userIndex, gameCount, userDone, gameStage, gameFile, movieFile
+    global hostUser, voteStarted, users, addedGames, currUser, userIndex, gameCount, userDone, gameStage, gameFile, movieFile, voteCount
     movieFile = open("movieFile.txt", "a")
     gameFile = open("gameFile.txt", "a")
->>>>>>> 845c4797667da9bdc68b328a802c68179b7aec05
     currUser = ""
     voteStarted = False
     hostUser = ""
