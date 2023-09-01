@@ -6,6 +6,8 @@ import pathlib
 import re
 import time
 
+movieFile = open("movieFile.txt", "a")
+gameFile = open("gameFile.txt", "a")
 currUser = ""
 voteStarted = False
 hostUser = ""
@@ -105,6 +107,7 @@ class MyClient(discord.Client):
                 if choise in addedGames: continue
                 if gameCount == 3: break
                 addedGames.append(choise)
+                gameFile.write(addedGames[choises])
                 gameCount += 1
 
             print(addedGames)
