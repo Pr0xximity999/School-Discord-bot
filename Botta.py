@@ -171,7 +171,6 @@ class MyClient(discord.Client):
             await voteGames()
 
         if(gameStage["finalResults"]):
-            await channel.send("Piss")
             await channel.send(users)
             hostUser = message.author.id
             await stop_vote(message)
